@@ -100,6 +100,20 @@ Every step emits a `RequestCreated` event on the Somnia Agents platform contract
 
 ---
 
+## Who drives the steps? (autonomy model)
+
+The AI work is autonomous: Somnia's validators fire every agent callback (`handleDecomposition`, `handleSignalUpdate`, `handleExecution`) themselves, with no gas or signature from us. But an EVM contract has no heartbeat — *something* has to send the `tick` and `executeIfReady` transactions that dispatch the next agent request. `tick` and `executeIfReady` are **permissionless**: anyone can call them, and the contract enforces every rule regardless of who does, so the caller can never deviate from what the mandate's owner defined.
+
+Two ways to drive those pokes:
+
+**v1 — keeper (the live product).** A tiny stateless [keeper service](./services/keeper) polls each chain every 60s and calls `tick` / `executeIfReady` on any armed mandate. It's a public poker on a timer — not a privileged actor. This is what the deployed `Lictor.sol` uses.
+
+**v2 — keeper-less, on-chain ([`LictorReactive.sol`](./contracts/LictorReactive.sol)).** The contract schedules *its own* heartbeat using **Somnia Reactivity** (the on-chain scheduler precompile at `0x0100`). When a mandate arms, it schedules a `tick` ~60s out; the reactivity callback refreshes signals, executes when they fire, and reschedules until the mandate is terminal — **no external keeper at all**. This is the same mandate pipeline as `Lictor.sol` plus an `onEvent(address,bytes32[],bytes)` callback and a self-scheduling loop (built and unit-tested, see `test/Lictor.test.ts`).
+
+Why v2 isn't the deployed product yet: Somnia Reactivity requires the **subscribing contract to hold ≥ 32 SOMI** (≈ $3 — an anti-spam minimum that stays locked as a balance, separate from each mandate's budget). To keep the deployed contract lean we ship the keeper today and keep `LictorReactive.sol` as the documented, tested upgrade path. Scheduling is wrapped so it **degrades gracefully** — if the precompile is unavailable or the balance is short, the keeper/manual path still drives the mandate. Deploy it with the precompile address `0x0000000000000000000000000000000000000100` and fund it with 32 SOMI to switch the product fully keeper-less.
+
+---
+
 ## Deployed contracts
 
 | Network | Chain ID | Address | Explorer |
