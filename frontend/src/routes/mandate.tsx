@@ -173,7 +173,7 @@ export default function MandateDetail({ id }: MandateDetailProps) {
           <div className="metric-grid" style={{ gridTemplateColumns: 'repeat(5,1fr)', marginBottom: 'var(--s7)' }}>
             <SumCell label="Trade" value={<TokenPair inT={m.tokenInSymbol} outT={m.tokenOutSymbol} />} />
             <SumCell label="Amount" value={<span className="mono">{fmtNum(Number(m.amountIn) / 1e6)} USDC.e</span>} />
-            <SumCell label="Budget" value={<span className="mono">{parseFloat(formatEther(m.budgetWei)).toFixed(2)} STT</span>} />
+            <SumCell label="Budget" value={<span className="mono">{parseFloat(formatEther(m.budgetWei)).toFixed(2)} {cfg.symbol}</span>} />
             <SumCell label="Signals" value={<span className="mono">{trg}/{signals.length} met</span>} />
             {amountOut != null
               ? <SumCell label="Received" value={<span className="mono" style={{ color: 'var(--up)' }}>{parseFloat(formatEther(amountOut)).toFixed(4)} WSOMI</span>} />

@@ -22,7 +22,7 @@ export default function Docs() {
             <Section title="How it works">
               <div className="col gap4">
                 {[
-                  ['1. Submit thesis', 'Call submitMandate(thesis, tokenIn, tokenOut, amountIn, minOut). Your STT budget is escrowed.'],
+                  ['1. Submit thesis', 'Approve the input token, then call submitMandate(thesis, tokenIn, tokenOut, amountIn, minOut). Your native-token budget (STT on testnet, SOMI on mainnet) is escrowed and the input tokens are taken into custody.'],
                   ['2. Decompose', 'The Decomposer agent (LLM Inference, Qwen3-30B) parses your thesis into a structured signal array via inferString.'],
                   ['3. Monitor', 'JSON API and Parse Website agents tick each signal at the REFRESH_INTERVAL (60s). Results are finalized via validator consensus.'],
                   ['4. Execute', 'When all signals trigger, the Executor agent calls executeSwap via inferToolsChat. The contract validates and executes the Algebra swap.'],
@@ -41,7 +41,7 @@ export default function Docs() {
                   <thead><tr><th>Function</th><th>Description</th></tr></thead>
                   <tbody>
                     {[
-                      ['submitMandate(thesis, tokenIn, tokenOut, amountIn, minOut)', 'Create and arm a mandate. Sends STT budget as msg.value.'],
+                      ['submitMandate(thesis, tokenIn, tokenOut, amountIn, minOut)', 'Create and arm a mandate. Sends the native-token budget as msg.value and pulls amountIn of tokenIn into custody (approve first).'],
                       ['tick(mandateId)', 'Manually dispatch signal agents for a mandate.'],
                       ['executeIfReady(mandateId)', 'Attempt execution if all signals triggered.'],
                       ['closeMandate(mandateId)', 'Cancel monitoring and reclaim remaining budget.'],

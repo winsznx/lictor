@@ -143,7 +143,7 @@ export function Topbar({ title, sub, actions, onCmd }: {
                   {account.address.slice(0, 6)}…{account.address.slice(-4)}
                 </span>
                 {balStr && (
-                  <span className="mono faint" style={{ fontSize: 10.5 }}>· {balStr} STT</span>
+                  <span className="mono faint" style={{ fontSize: 10.5 }}>· {balStr} {balance?.symbol ?? ''}</span>
                 )}
               </div>
             )

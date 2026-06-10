@@ -610,7 +610,7 @@ function ActConsensus() {
 
 function ActCapital() {
   const nodes = [
-    { t: 'Budget',   v: '1.00 STT',       d: 'escrowed',            a: null },
+    { t: 'Budget',   v: '1.00 SOMI',      d: 'escrowed',            a: null },
     { t: 'Executor', v: 'inferToolsChat',  d: 'tool calling',        a: 'executor' },
     { t: 'Tool call', v: 'swap()',         d: 'whitelisted selector', a: null },
     { t: 'Router',   v: 'Algebra Integral', d: '$296K TVL',          a: null },
@@ -706,7 +706,7 @@ function ActExecution() {
                 ['route',          'Algebra Integral · USDC.e→WSOMI'],
                 ['settlement tx',  '0x88fe…11a9'],
                 ['block',          '401,415,022'],
-                ['gas',            '0.0019 STT'],
+                ['gas',            '0.0019 SOMI'],
                 ['receipt',        'rcp_8842'],
               ] as const).map(([k, v], i) => (
                 <div key={k} className="row between" style={{ borderBottom: '1px solid var(--border-mute)', paddingBottom: 9, opacity: phase >= 2 ? 1 : 0.25, transition: `opacity 0.4s ${i * 80}ms` }}>
