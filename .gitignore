@@ -1,0 +1,27 @@
+# Internal moat — never commit
+/internal
+
+# Node / hardhat
+node_modules/
+artifacts/
+cache/
+typechain-types/
+coverage/
+coverage.json
+
+# Build output (generated; Railway rebuilds on deploy)
+dist/
+*.tsbuildinfo
+
+# Env (never commit real secrets — only .env.example is tracked)
+.env
+.env.*
+!.env.example
+
+# Editor / OS / tooling
+.vscode/
+.idea/
+.claude/
+.DS_Store
+*.swp
+*.log

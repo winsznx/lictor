@@ -1,0 +1,25 @@
+{
+  "name": "lictor",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:probe": "hardhat run scripts/01-deploy-probe.ts --network somnia_testnet",
+    "probe:json-api": "hardhat run scripts/02-probe-json-api.ts --network somnia_testnet",
+    "probe:infer-string": "hardhat run scripts/03-probe-infer-string.ts --network somnia_testnet",
+    "probe:infer-tools-chat": "hardhat run scripts/04-probe-infer-tools-chat.ts --network somnia_testnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "5.0.0",
+    "@nomicfoundation/hardhat-viem": "2.0.6",
+    "@types/node": "^20.0.0",
+    "hardhat": "^2.28.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.8.3"
+  },
+  "dependencies": {
+    "dotenv": "16.5.0",
+    "viem": "^2.0.0"
+  }
+}
