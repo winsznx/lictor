@@ -122,8 +122,9 @@ contract LictorReactive is ISomniaEventHandler {
     mapping(uint256 => bool) private _tokenRefunded;
 
     // ─── Reactivity (v2 keeper-less self-scheduling) ──────────────────────────
-    ISomniaReactivity private constant REACTIVITY =
-        ISomniaReactivity(0x0000000000000000000000000000000000000100);
+    // The Somnia Reactivity precompile lives at 0x0100 in production; it is constructor-set
+    // (immutable) so the scheduling + callback path is unit-testable against a mock.
+    ISomniaReactivity private immutable REACTIVITY;
     uint256 private constant REACTIVE_INTERVAL = 60;          // seconds between heartbeats
     uint64  private constant REACTIVE_GAS      = 10_000_000;  // gas budget for the callback
 
@@ -171,8 +172,9 @@ contract LictorReactive is ISomniaEventHandler {
 
     // ─── Constructor ──────────────────────────────────────────────────────────
 
-    constructor(address platform) {
+    constructor(address platform, address reactivity) {
         PLATFORM = IAgentRequester(platform);
+        REACTIVITY = ISomniaReactivity(reactivity); // 0x0000000000000000000000000000000000000100 in production
         owner = msg.sender;
 
         allowedTokens[USDC_E] = true;
@@ -1016,10 +1018,18 @@ contract LictorReactive is ISomniaEventHandler {
             isCoalesced:             false
         });
 
-        try REACTIVITY.subscribe(d) returns (uint256 subId) {
+        // Low-level call so scheduling NEVER reverts the caller — degrades gracefully if the
+        // precompile is absent (e.g. local test without the mock) or the contract is under the
+        // 32-ether minimum. A typed try/catch would not catch a return-decode failure on an
+        // empty/no-code response (viaIR), so we check the returndata ourselves.
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool ok, bytes memory ret) = address(REACTIVITY).call(
+            abi.encodeWithSelector(ISomniaReactivity.subscribe.selector, d)
+        );
+        if (ok && ret.length >= 32) {
             _tickMandate[tMs] = mandateId + 1;
-            emit TickScheduled(mandateId, tMs, subId);
-        } catch {
+            emit TickScheduled(mandateId, tMs, abi.decode(ret, (uint256)));
+        } else {
             emit TickScheduleFailed(mandateId);
         }
     }

@@ -706,3 +706,93 @@ describe("Lictor — token custody, budget isolation, callback safety (C1/H1/M1)
     expect(mandate.status).to.equal(STATUS.ARMED);
   });
 });
+
+// ─── LictorReactive — keeper-less self-scheduling (Somnia Reactivity) ─────────────
+
+describe("LictorReactive — keeper-less self-scheduling", function () {
+  this.timeout(60_000);
+
+  const SIGNAL_JSON =
+    '{"conjunctive":true,"signals":[{"sourceType":"JSON_API",' +
+    '"sourceUrl":"https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",' +
+    '"parseSelector":"bitcoin.usd","comparator":"GT","threshold":90000,"decimals":8}]}';
+  const AMOUNT_IN = 1000n;
+  const MINT = 1_000_000n;
+  const MAX = (1n << 256n) - 1n;
+
+  let pub: PublicClient;
+  let deployer: WalletClient;
+  let user: WalletClient;
+  let lictor: { address: Address; abi: Abi };
+  let platform: { address: Address; abi: Abi };
+  let reactivity: { address: Address; abi: Abi };
+  let userAddr: Address;
+  let snap: string;
+
+  async function w(wallet: WalletClient, contract: { address: Address; abi: Abi }, fn: string, args: readonly unknown[] = [], value?: bigint) {
+    const account = (wallet.account as Account).address;
+    const hash = await wallet.writeContract({ address: contract.address, abi: contract.abi, functionName: fn, args, value, account } as Parameters<typeof wallet.writeContract>[0]);
+    return pub.waitForTransactionReceipt({ hash });
+  }
+  const token = (addr: Address) => ({ address: addr, abi: ERC20_ABI as Abi });
+  const read = (address: Address, abi: Abi, fn: string, args: readonly unknown[] = []) =>
+    pub.readContract({ address, abi, functionName: fn, args }) as Promise<bigint>;
+  const lastReq = () => pub.readContract({ address: platform.address, abi: platform.abi, functionName: "lastRequestId" }) as Promise<bigint>;
+
+  before(async function () {
+    pub = await hre.viem.getPublicClient();
+    const wallets = await hre.viem.getWalletClients();
+    deployer = wallets[0];
+    user = wallets[1];
+    userAddr = (user.account as Account).address;
+
+    const erc = await hre.artifacts.readArtifact("MockERC20");
+    for (const addr of [USDC_E, WSOMI]) {
+      await hre.network.provider.send("hardhat_setCode", [addr, erc.deployedBytecode]);
+    }
+    snap = (await hre.network.provider.send("evm_snapshot", [])) as string;
+  });
+
+  beforeEach(async function () {
+    await hre.network.provider.send("evm_revert", [snap]);
+    snap = (await hre.network.provider.send("evm_snapshot", [])) as string;
+
+    // Deploy the reactivity mock normally and inject it (the precompile address is a
+    // constructor param, 0x0100 in production) — 0x0100 is in EDR's reserved range.
+    reactivity = await deployContract("MockReactivity", deployer, pub, []);
+    platform = await deployContract("MockPlatform", deployer, pub, []);
+    lictor = await deployContract("LictorReactive", deployer, pub, [platform.address, reactivity.address]);
+    await w(user, token(USDC_E), "mint", [userAddr, MINT]);
+    await w(user, token(USDC_E), "approve", [lictor.address, MAX]);
+  });
+
+  it("schedules its own heartbeat on arm, then ticks + reschedules + executes — no keeper", async function () {
+    // #given a submitted + decomposed (ARMED) mandate
+    await w(user, lictor, "submitMandate", ["buy WSOMI if BTC > 90000", USDC_E, WSOMI, AMOUNT_IN, 500n], parseEther("2.0"));
+    await w(deployer, platform, "dispatchDecomposition", [lictor.address, await lastReq(), encodeString(SIGNAL_JSON), RS.Success]);
+
+    // #then arming scheduled a reactivity heartbeat (the contract called subscribe itself)
+    expect(await read(reactivity.address, reactivity.abi, "lastSubId")).to.equal(1n);
+    const tMs1 = await read(reactivity.address, reactivity.abi, "lastTimestampMs");
+    expect(tMs1).to.be.greaterThan(0n);
+
+    // #when the scheduled callback fires
+    const reqBefore = await lastReq();
+    await w(deployer, reactivity, "fire", [lictor.address, tMs1]);
+
+    // #then it dispatched a signal tick and rescheduled the next heartbeat
+    expect(await lastReq()).to.be.greaterThan(reqBefore);      // a signal request went out
+    expect(await read(reactivity.address, reactivity.abi, "lastSubId")).to.equal(2n); // rescheduled
+    let mandate = await pub.readContract({ address: lictor.address, abi: lictor.abi, functionName: "getMandate", args: [0n] }) as { status: number };
+    expect(mandate.status).to.equal(STATUS.ARMED);
+
+    // #when the signal comes back triggered and the next heartbeat fires
+    await w(deployer, platform, "dispatchSignalUpdate", [lictor.address, await lastReq(), encodeUint(9500000000000n), RS.Success]);
+    const tMs2 = await read(reactivity.address, reactivity.abi, "lastTimestampMs");
+    await w(deployer, reactivity, "fire", [lictor.address, tMs2]);
+
+    // #then the mandate executed autonomously (status EXECUTING) — never touched by a human or keeper
+    mandate = await pub.readContract({ address: lictor.address, abi: lictor.abi, functionName: "getMandate", args: [0n] }) as { status: number };
+    expect(mandate.status).to.equal(STATUS.EXECUTING);
+  });
+});
