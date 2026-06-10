@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, createContext
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useBalance, useBlockNumber } from 'wagmi'
 import { formatEther } from 'viem'
+import { useChainCfg } from '../hooks/useChainCfg'
 import * as Icons from './icons'
 
 // ─── Command open context ─────────────────────────────────────────────────────
@@ -47,6 +48,7 @@ const MORE_NAV: NavItem[] = [
 
 export function Sidebar({ routeName, onCmd }: { routeName: string; onCmd: () => void }) {
   const { data: blockNumber } = useBlockNumber({ watch: true })
+  const cfg = useChainCfg()
 
   function NavItem({ it }: { it: NavItem }) {
     const Icon = Icons[it.icon] as React.ComponentType<{ size?: number }>
@@ -65,7 +67,7 @@ export function Sidebar({ routeName, onCmd }: { routeName: string; onCmd: () => 
         <a href="#/desk" className="brand">
           <Icons.Logo size={22} />
           <span className="brand-name">LICTOR</span>
-          <span className="brand-net">testnet</span>
+          <span className="brand-net">{cfg.isMainnet ? 'mainnet' : 'testnet'}</span>
         </a>
       </div>
       <button className="cmd-trigger" onClick={onCmd}>
@@ -83,7 +85,7 @@ export function Sidebar({ routeName, onCmd }: { routeName: string; onCmd: () => 
       <div className="side-foot">
         <div className="row gap2 center" style={{ justifyContent: 'flex-start' }}>
           <span className="pulse-dot up" />
-          <span className="mono" style={{ fontSize: 10.5, color: 'var(--text-mid)' }}>Shannon · 50312</span>
+          <span className="mono" style={{ fontSize: 10.5, color: 'var(--text-mid)' }}>{cfg.label}</span>
         </div>
         <div className="row between" style={{ marginTop: 6 }}>
           <span className="mono faint" style={{ fontSize: 9.5 }}>
@@ -127,7 +129,7 @@ export function Topbar({ title, sub, actions, onCmd }: {
         <button className="btn-icon top-search" onClick={handleCmd}><Icons.Search size={16} /></button>
         <button className="btn-icon"><Icons.Bell size={16} /><span className="bell-dot" /></button>
         <ConnectButton.Custom>
-          {({ account, chain, openConnectModal, mounted }) => {
+          {({ account, chain, openConnectModal, openAccountModal, openChainModal, mounted }) => {
             if (!mounted || !account || !chain) {
               return (
                 <button className="btn btn-secondary btn-sm" style={{ borderRadius: 999 }} onClick={openConnectModal}>
@@ -135,9 +137,16 @@ export function Topbar({ title, sub, actions, onCmd }: {
                 </button>
               )
             }
+            if (chain.unsupported) {
+              return (
+                <button className="btn btn-secondary btn-sm" style={{ borderRadius: 999 }} onClick={openChainModal}>
+                  Wrong network
+                </button>
+              )
+            }
             const balStr = balance ? parseFloat(formatEther(balance.value)).toFixed(2) : null
             return (
-              <div className="wallet-chip" style={{ cursor: 'pointer' }} onClick={openConnectModal}>
+              <div className="wallet-chip" style={{ cursor: 'pointer' }} onClick={openAccountModal}>
                 <span className="pulse-dot up" style={{ width: 5, height: 5 }} />
                 <span className="mono" style={{ fontSize: 11.5, color: 'var(--text-hi)' }}>
                   {account.address.slice(0, 6)}…{account.address.slice(-4)}

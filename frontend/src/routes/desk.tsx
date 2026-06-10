@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { Topbar, useToast } from '../app/shell'
 import { MandateRow } from '../app/blocks'
 import { useMandates } from '../hooks/useMandates'
+import { useChainCfg } from '../hooks/useChainCfg'
 import * as Icons from '../app/icons'
 
 export default function Desk() {
   const push = useToast()
+  const cfg = useChainCfg()
   const [draft, setDraft] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'closed'>('all')
   const { data: mandates = [], isLoading } = useMandates()
@@ -74,7 +76,7 @@ export default function Desk() {
             <Kpi label="Active mandates" value={active.length.toString()} />
             <Kpi label="Signals monitored" value={sigCount.toString()} sub={`${sigMet} met`} />
             <Kpi label="Total mandates" value={mandates.length.toString()} />
-            <Kpi label="Deployed contract" value="v2" sub="Shannon testnet" />
+            <Kpi label="Network" value={cfg.isMainnet ? 'Mainnet' : 'Testnet'} sub={cfg.label} />
           </div>
 
           {/* MANDATE LIST */}

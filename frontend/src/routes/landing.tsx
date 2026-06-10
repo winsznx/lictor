@@ -129,7 +129,7 @@ function TopNav({ scrolled }: { scrolled: boolean }) {
         <a href="#/docs" className="nav-docs-mobile">Docs</a>
         <span className="nav-div" />
         <ConnectButton.Custom>
-          {({ account, chain, openConnectModal, mounted }) => {
+          {({ account, chain, openConnectModal, openAccountModal, mounted }) => {
             if (!mounted || !account || !chain) {
               return (
                 <button className="btn btn-secondary btn-sm" style={{ borderRadius: 999 }} onClick={openConnectModal}>
@@ -138,7 +138,7 @@ function TopNav({ scrolled }: { scrolled: boolean }) {
               )
             }
             return (
-              <div className="wallet-chip" style={{ cursor: 'pointer' }} onClick={openConnectModal}>
+              <div className="wallet-chip" style={{ cursor: 'pointer' }} onClick={openAccountModal}>
                 <span className="pulse-dot up" style={{ width: 5, height: 5 }} />
                 <span className="mono" style={{ fontSize: 11.5, color: 'var(--text-hi)' }}>
                   {account.address.slice(0, 6)}…{account.address.slice(-4)}
@@ -916,7 +916,7 @@ export default function Landing() {
       </section>
 
       <footer className="lx-foot">
-        <span className="row gap2"><Icons.Logo size={16} />LICTOR · SHANNON TESTNET · BUILT ON SOMNIA</span>
+        <span className="row gap2"><Icons.Logo size={16} />LICTOR · LIVE ON SOMNIA MAINNET</span>
         <span>STATE A THESIS. AGENTS EXECUTE.</span>
       </footer>
     </div>
