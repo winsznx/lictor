@@ -230,6 +230,14 @@ Get testnet STT from the [official faucet](https://testnet.somnia.network/) or G
 
 ---
 
+## Contributing
+
+PRs welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the stack, setup, and ground rules.
+
+## Security
+
+Found a vulnerability? Please disclose privately — see [SECURITY.md](./SECURITY.md). The on-chain threat model is summarized in the [Security](#security) table above.
+
 ## License
 
 MIT. See [LICENSE](./LICENSE).
