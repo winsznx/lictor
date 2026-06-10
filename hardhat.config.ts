@@ -28,6 +28,33 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },
+  etherscan: {
+    apiKey: {
+      somnia_testnet: "empty",
+      somnia_mainnet: "empty",
+    },
+    customChains: [
+      {
+        network: "somnia_testnet",
+        chainId: 50312,
+        urls: {
+          apiURL: "https://shannon-explorer.somnia.network/api",
+          browserURL: "https://shannon-explorer.somnia.network",
+        },
+      },
+      {
+        network: "somnia_mainnet",
+        chainId: 5031,
+        urls: {
+          apiURL: "https://explorer.somnia.network/api/",
+          browserURL: "https://explorer.somnia.network",
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: false,
+  },
 };
 
 export default config;
