@@ -52,6 +52,7 @@ export type ChainCfg = {
   deployBlock: bigint
   explorerBase: string
   receiptBase: string
+  agentsUrl: string
   rpc: string
 }
 
@@ -65,6 +66,7 @@ const MAINNET_CFG: ChainCfg = {
   deployBlock: MAINNET_DEPLOY_BLOCK,
   explorerBase: 'https://explorer.somnia.network',
   receiptBase: 'https://agents.somnia.network/receipts',
+  agentsUrl: 'https://agents.somnia.network',
   rpc: 'https://api.infra.mainnet.somnia.network',
 }
 
@@ -78,6 +80,7 @@ const TESTNET_CFG: ChainCfg = {
   deployBlock: TESTNET_DEPLOY_BLOCK,
   explorerBase: 'https://shannon-explorer.somnia.network',
   receiptBase: 'https://agents.testnet.somnia.network/receipts',
+  agentsUrl: 'https://agents.testnet.somnia.network',
   rpc: 'https://api.infra.testnet.somnia.network',
 }
 

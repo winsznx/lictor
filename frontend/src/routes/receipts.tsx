@@ -41,8 +41,8 @@ export default function Receipts() {
         title="Receipts"
         sub={`${receipts.length} agent calls · consensus-finalized`}
         actions={
-          <a href={cfg.receiptBase} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-            <Icons.External size={13} />receipts
+          <a href={cfg.agentsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+            <Icons.External size={13} />agents platform
           </a>
         }
       />
