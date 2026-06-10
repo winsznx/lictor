@@ -16,7 +16,7 @@ export type NavItem = { id: string; label: string; icon: keyof typeof Icons; has
 
 const NAV: NavItem[] = [
   { id: 'desk',      label: 'Desk',        icon: 'Desk',     hash: '#/desk' },
-  { id: 'mandates',  label: 'Mandates',    icon: 'Layers',   hash: '#/mandate/0' },
+  { id: 'mandates',  label: 'Mandates',    icon: 'Layers',   hash: '#/desk' },
   { id: 'signals',   label: 'Signals',     icon: 'Signal',   hash: '#/signals' },
   { id: 'consensus', label: 'Agent Logs',  icon: 'Nodes',    hash: '#/consensus' },
   { id: 'receipts',  label: 'Receipts',    icon: 'Receipt',  hash: '#/receipts' },
@@ -31,7 +31,7 @@ const NAV2: NavItem[] = [
 
 const BOTTOM_TABS: NavItem[] = [
   { id: 'desk',     label: 'Desk',     icon: 'Desk',    hash: '#/desk' },
-  { id: 'mandates', label: 'Mandates', icon: 'Layers',  hash: '#/mandate/0' },
+  { id: 'mandates', label: 'Mandates', icon: 'Layers',  hash: '#/desk' },
   { id: 'signals',  label: 'Signals',  icon: 'Signal',  hash: '#/signals' },
   { id: 'receipts', label: 'Receipts', icon: 'Receipt', hash: '#/receipts' },
 ]
