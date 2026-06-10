@@ -1,6 +1,6 @@
 import { useAccount, usePublicClient } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
-import { parseAbiItem, type Address } from 'viem'
+import { type Address, type PublicClient } from 'viem'
 import { lictorAbi } from '../lib/abi'
 import { chainCfg, tokenSymbol, statusLabel, comparatorLabel } from '../lib/chain'
 import { mandateCode, sourceTypeAgent, fmtAgo } from '../lib/utils'
@@ -92,11 +92,38 @@ function adaptMandate(mandateId: bigint, m: OnChainMandate): DisplayMandate {
   }
 }
 
-// ─── Hook: all mandates for connected wallet ──────────────────────────────────
+// ─── Mandate enumeration ──────────────────────────────────────────────────────
 
-const mandateSubmittedEvent = parseAbiItem(
-  'event MandateSubmitted(uint256 indexed mandateId, address indexed owner, string thesis, address tokenIn, address tokenOut, uint256 amountIn)',
-)
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+const MAX_SCAN = 256 // runaway guard; real stop is the first empty mandate slot
+
+/**
+ * Enumerate mandates by reading getMandate(0..N) until an empty slot.
+ *
+ * We deliberately avoid getLogs: Somnia caps eth_getLogs at 1000 blocks, far below
+ * the deploy→head range (~1.5M blocks), so a full-range scan errors out. Mandate ids
+ * are sequential from 0, so reading until owner == address(0) is correct and cheap for
+ * the current scale. (A production indexer or a paginated contract getter would scale further.)
+ */
+export async function enumerateMandates(
+  client: PublicClient,
+  lictor: Address,
+): Promise<{ id: bigint; m: OnChainMandate }[]> {
+  const out: { id: bigint; m: OnChainMandate }[] = []
+  for (let i = 0n; i < BigInt(MAX_SCAN); i++) {
+    const m = (await client.readContract({
+      address: lictor,
+      abi: lictorAbi,
+      functionName: 'getMandate',
+      args: [i],
+    })) as unknown as OnChainMandate
+    if (m.owner.toLowerCase() === ZERO_ADDRESS) break
+    out.push({ id: i, m })
+  }
+  return out
+}
+
+// ─── Hook: all mandates for connected wallet ──────────────────────────────────
 
 export function useMandates() {
   const { address } = useAccount()
@@ -110,33 +137,12 @@ export function useMandates() {
       if (!address || !client) return []
 
       const cfg = chainCfg(client.chain?.id)
-      const latest = await client.getBlockNumber()
-      const logs = await client.getLogs({
-        address: cfg.lictor,
-        event: mandateSubmittedEvent,
-        args: { owner: address },
-        fromBlock: cfg.deployBlock,
-        toBlock: latest,
-      })
+      const all = await enumerateMandates(client, cfg.lictor)
 
-      const mandateIds = logs
-        .map((log) => log.args.mandateId)
-        .filter((id): id is bigint => id !== undefined)
-
-      const mandates = await Promise.all(
-        mandateIds.map(async (mandateId) => {
-          const m = await client.readContract({
-            address: cfg.lictor,
-            abi: lictorAbi,
-            functionName: 'getMandate',
-            args: [mandateId],
-          })
-          return adaptMandate(mandateId, m as unknown as OnChainMandate)
-        }),
-      )
-
-      // Most recent first
-      return mandates.sort((a, b) => Number(b.createdAt - a.createdAt))
+      return all
+        .filter(({ m }) => m.owner.toLowerCase() === address.toLowerCase())
+        .map(({ id, m }) => adaptMandate(id, m))
+        .sort((a, b) => Number(b.createdAt - a.createdAt))
     },
   })
 }
