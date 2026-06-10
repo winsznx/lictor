@@ -57,8 +57,8 @@ Full architecture active: executeIfReady dispatches inferToolsChat → handleExe
 
 ## File locations
 - Public docs: /README.md, /ONE_PAGER.md
-- Internal: /internal/*
-- Cross-session memory: /AGENT_PROGRESS.md
+- Internal: /internal/* (gitignored — PRD, build log, demo script)
+- Cross-session memory: /internal/AGENT_PROGRESS.md
 - Solidity: /contracts/
 - Scripts: /scripts/
 - Tests: /test/
