@@ -102,18 +102,19 @@ const health: Record<string, { lastRun: number; mandatesChecked: number }> = {};
 type SignalTuple = { lastUpdated: bigint; triggered: boolean };
 type MandateTuple = { status: number };
 
+const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
+const MAX_SCAN = 256;
+
 async function discoverArmedMandateIds(pub: PublicClient, t: Target): Promise<Set<bigint>> {
-  const latest = await pub.getBlockNumber();
-  const logs = await pub.getLogs({
-    address: t.lictor,
-    event: LICTOR_ABI.find((x) => x.type === "event" && x.name === "MandateArmed") as never,
-    fromBlock: t.deployBlock,
-    toBlock: latest,
-  });
+  // Enumerate getMandate(0..N) until an empty slot. Somnia caps eth_getLogs at 1000
+  // blocks, so a full-range MandateArmed scan errors out on a long-lived deployment.
   const ids = new Set<bigint>();
-  for (const log of logs) {
-    const args = (log as { args?: { mandateId?: bigint } }).args;
-    if (args?.mandateId !== undefined) ids.add(args.mandateId);
+  for (let i = 0n; i < BigInt(MAX_SCAN); i++) {
+    const m = (await pub.readContract({
+      address: t.lictor, abi: LICTOR_ABI, functionName: "getMandate", args: [i],
+    })) as { owner: string; status: number };
+    if (m.owner.toLowerCase() === ZERO_ADDR) break;
+    if (m.status === STATUS_ARMED) ids.add(i);
   }
   return ids;
 }
