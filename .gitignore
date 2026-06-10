@@ -25,3 +25,5 @@ dist/
 .DS_Store
 *.swp
 *.log
+# Internal build log — keep local, never publish
+AGENT_PROGRESS.md
