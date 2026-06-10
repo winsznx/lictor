@@ -5,7 +5,7 @@ import { formatEther } from 'viem'
 import { lictorAbi } from '../lib/abi'
 import { explorerAddress, receiptUrl } from '../lib/chain'
 import { useChainCfg } from '../hooks/useChainCfg'
-import { fmtAgo, fmtNum, VALIDATORS } from '../lib/utils'
+import { fmtAgo, fmtNum } from '../lib/utils'
 import { useMandate } from '../hooks/useMandates'
 import { useSignals } from '../hooks/useSignals'
 import { Topbar, useToast } from '../app/shell'
@@ -263,19 +263,22 @@ export default function MandateDetail({ id }: MandateDetailProps) {
               {/* Validators */}
               <div>
                 <div className="sec-head"><div className="sec-title"><h2 className="h3">Validators</h2></div></div>
-                <div className="panel">
-                  {VALIDATORS.slice(0, 3).map((v, i) => (
-                    <div key={v.id} className="row between" style={{ padding: 'var(--s3) var(--s4)', borderBottom: i < 2 ? '1px solid var(--border-faint)' : 'none' }}>
-                      <span className="row gap2">
-                        <span style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Icons.Check size={9} style={{ color: 'var(--text-lo)' }} />
-                        </span>
-                        <span className="mono" style={{ fontSize: 12 }}>{v.label}</span>
-                        <span className="mono faint" style={{ fontSize: 10 }}>{v.region}</span>
-                      </span>
-                      <span className="mono faint" style={{ fontSize: 11 }}>participating</span>
-                    </div>
-                  ))}
+                <div className="panel" style={{ padding: 'var(--s5)' }}>
+                  <dl className="kv" style={{ gridTemplateColumns: '120px 1fr' }}>
+                    <dt>Subcommittee</dt><dd className="mono" style={{ fontSize: 12 }}>3 validators / request</dd>
+                    <dt>Consensus</dt><dd className="mono" style={{ fontSize: 12 }}>2-of-3 threshold</dd>
+                    <dt>Determinism</dt><dd className="mono" style={{ fontSize: 12 }}>temp 0 · fixed seed</dd>
+                  </dl>
+                  <div className="divider" style={{ margin: 'var(--s4) 0' }} />
+                  <p className="muted sm" style={{ lineHeight: 1.55 }}>
+                    Somnia assigns a fresh validator subcommittee to every agent request. The exact
+                    validators and their identical outputs are recorded in each request's receipt.
+                  </p>
+                  {signals.some(s => s.lastRequestId > 0n) && (
+                    <a href="#/receipts" className="mono" style={{ fontSize: 11.5, color: 'var(--accent-hi)', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 'var(--s3)' }}>
+                      View validators in receipts <Icons.Arrow size={12} />
+                    </a>
+                  )}
                 </div>
               </div>
 

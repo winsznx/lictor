@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { AGENTS, VALIDATORS, fmtNum, signalDistance, fmtAgo } from '../lib/utils'
+import { AGENTS, fmtNum, signalDistance, fmtAgo } from '../lib/utils'
 import type { DisplaySignal } from '../hooks/useMandates'
 import * as Icons from './icons'
 
@@ -234,16 +234,16 @@ export function ConsensusViz({ value = 0.92, validators = 5, size = 'lg', animat
   size?: 'lg' | 'sm'
   animate?: boolean
 }) {
-  const vlist = VALIDATORS.slice(0, validators)
+  const vlist = Array.from({ length: validators })
   const agreeing = Math.round(value * validators)
   const big = size === 'lg'
   return (
     <div className="col gap4">
       <div className="row gap3 wrap">
-        {vlist.map((v, i) => {
+        {vlist.map((_, i) => {
           const agree = i < agreeing
           return (
-            <div key={v.id} className="col gap2" style={{ alignItems: 'center', animation: animate ? `fadeUp 0.5s var(--ease-out) ${i * 90}ms both` : 'none' }}>
+            <div key={i} className="col gap2" style={{ alignItems: 'center', animation: animate ? `fadeUp 0.5s var(--ease-out) ${i * 90}ms both` : 'none' }}>
               <div style={{ position: 'relative', width: big ? 46 : 34, height: big ? 46 : 34 }}>
                 <svg width="100%" height="100%" viewBox="0 0 46 46">
                   <circle cx="23" cy="23" r="20"
@@ -260,7 +260,7 @@ export function ConsensusViz({ value = 0.92, validators = 5, size = 'lg', animat
                   )}
                 </svg>
               </div>
-              <span className="mono faint" style={{ fontSize: 9.5 }}>{v.label.replace('val.', '')}</span>
+              <span className="mono faint" style={{ fontSize: 9.5 }}>node {i + 1}</span>
             </div>
           )
         })}
