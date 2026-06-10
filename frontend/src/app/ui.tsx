@@ -140,15 +140,19 @@ export function BarChart({ data, w = 600, h = 160, color }: {
 }) {
   const c = color || 'var(--accent)'
   const max = Math.max(...data) || 1
-  const bw = w / data.length
+  const slot = w / data.length
+  // Cap the visual bar width so a single data point doesn't fill the whole panel.
+  const barW = Math.min(slot * 0.64, 44)
   return (
-    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
       {data.map((v, i) => {
-        const bh = (v / max) * (h - 8)
+        const bh = Math.max((v / max) * (h - 8), 2)
         return (
-          <rect key={i} x={i * bw + bw * 0.18} y={h - bh} width={bw * 0.64} height={bh} rx="1.5"
+          <rect key={i} x={i * slot + (slot - barW) / 2} y={h - bh} width={barW} height={bh} rx="2"
             fill={i === data.length - 1 ? 'var(--accent-hi)' : c}
-            opacity={i === data.length - 1 ? 1 : 0.55} />
+            opacity={i === data.length - 1 ? 1 : 0.55}>
+            <title>{v.toLocaleString()}</title>
+          </rect>
         )
       })}
     </svg>
