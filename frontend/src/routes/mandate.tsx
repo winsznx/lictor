@@ -218,7 +218,7 @@ export default function MandateDetail({ id }: MandateDetailProps) {
               <div>
                 <div className="sec-head"><div className="sec-title"><h2 className="h3">Consensus layer</h2></div></div>
                 <div className="panel" style={{ padding: 'var(--s6)' }}>
-                  <ConsensusViz value={0.92} validators={3} size="sm" />
+                  <ConsensusViz value={signals.length ? trg / signals.length : 0} validators={3} size="sm" />
                   <div className="divider" style={{ margin: 'var(--s5) 0' }} />
                   <div className="row between"><span className="label">Mechanism</span><span className="mono faint" style={{ fontSize: 11 }}>temp 0 · fixed seed</span></div>
                   <div className="row between" style={{ marginTop: 8 }}><span className="label">Subcommittee</span><span className="mono" style={{ fontSize: 11.5, color: 'var(--text-mid)' }}>3 validators</span></div>

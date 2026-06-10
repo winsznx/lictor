@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Topbar } from '../app/shell'
 import { AreaChart, BarChart, Ring } from '../app/ui'
 import { useMandates } from '../hooks/useMandates'
-import { generateSeries } from '../lib/utils'
+import { tokenDecimals } from '../lib/chain'
 
 export default function Analytics() {
   const { data: mandates = [] } = useMandates()
@@ -12,12 +13,29 @@ export default function Analytics() {
   const total = mandates.length
   const successRate = total > 0 ? executed / total : 0
 
-  const priceSeries = useMemo(() => generateSeries(58000, 2000, 60, 200), [])
-  const volumeSeries = useMemo(() => generateSeries(1200, 300, 30, 0), [])
+  // Real BTC price history (7d) from the same public source the JSON API agent reads.
+  // Client-side fetch, no backend of ours — falls back to a notice if the API is unreachable.
+  const { data: btcSeries = [], isLoading: btcLoading, isError: btcError } = useQuery({
+    queryKey: ['btc-7d'],
+    staleTime: 5 * 60_000,
+    retry: false,
+    queryFn: async (): Promise<number[]> => {
+      const r = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7')
+      if (!r.ok) throw new Error('price fetch failed')
+      const j = (await r.json()) as { prices?: [number, number][] }
+      return (j.prices ?? []).map(p => p[1])
+    },
+  })
+
+  // Real trade volume: input amount per mandate (newest first).
+  const volumeSeries = useMemo(
+    () => mandates.map(m => Number(m.amountIn) / Math.pow(10, tokenDecimals(m.tokenIn))).reverse(),
+    [mandates],
+  )
 
   return (
     <>
-      <Topbar title="Analytics" sub="Mandate performance · market data" />
+      <Topbar title="Analytics" sub="Mandate performance · live market data" />
       <div className="page">
         <div className="page-pad" style={{ maxWidth: 1100 }}>
 
@@ -30,9 +48,15 @@ export default function Analytics() {
 
           <div className="row gap6 wrap" style={{ alignItems: 'flex-start', marginBottom: 'var(--s8)' }}>
             <div style={{ flex: '1 1 520px', minWidth: 0 }}>
-              <div className="sec-head"><div className="sec-title"><h2 className="h3">BTC price (simulated)</h2></div></div>
+              <div className="sec-head"><div className="sec-title"><h2 className="h3">BTC price · 7d</h2></div></div>
               <div className="panel" style={{ padding: 'var(--s5)' }}>
-                <AreaChart data={priceSeries} h={180} />
+                {btcLoading ? (
+                  <div className="empty" style={{ padding: 'var(--s7)' }}><span className="spinner" /><span className="muted sm">Loading price…</span></div>
+                ) : btcError || btcSeries.length === 0 ? (
+                  <div className="empty" style={{ padding: 'var(--s7)' }}><span className="muted sm">Live price unavailable right now</span></div>
+                ) : (
+                  <AreaChart data={btcSeries} h={180} />
+                )}
               </div>
             </div>
             <div style={{ flex: '1 1 300px', minWidth: 0 }}>
@@ -48,9 +72,13 @@ export default function Analytics() {
             </div>
           </div>
 
-          <div className="sec-head"><div className="sec-title"><h2 className="h3">Volume (simulated)</h2></div></div>
+          <div className="sec-head"><div className="sec-title"><h2 className="h3">Trade volume · by mandate (USDC.e in)</h2></div></div>
           <div className="panel" style={{ padding: 'var(--s5)' }}>
-            <BarChart data={volumeSeries} h={140} />
+            {volumeSeries.length > 0 ? (
+              <BarChart data={volumeSeries} h={140} />
+            ) : (
+              <div className="empty" style={{ padding: 'var(--s7)' }}><span className="muted sm">No trades yet — submit a mandate to see volume here.</span></div>
+            )}
           </div>
         </div>
       </div>
