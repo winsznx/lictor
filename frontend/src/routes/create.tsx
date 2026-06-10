@@ -26,14 +26,14 @@ export default function CreateMandate() {
   const [step, setStep] = useState(0)
   const [thesis, setThesis] = useState(() => sessionStorage.getItem('lictor_draft') ?? '')
   const [decomposing, setDecomposing] = useState(false)
-  const [amount, setAmount] = useState(500)
+  const [amount, setAmount] = useState('500')
   const [budget, setBudget] = useState(1.5)
   const [phase, setPhase] = useState<'idle' | 'approving' | 'submitting'>('idle')
 
   const { writeContractAsync } = useWriteContract()
 
   const amountIn = useMemo(() => {
-    try { return parseUnits(amount.toString(), tokenDecimals(USDC_E)) } catch { return 0n }
+    try { return parseUnits(amount, tokenDecimals(USDC_E)) } catch { return 0n }
   }, [amount])
 
   // Live expected-output quote from Algebra QuoterV2 (mainnet). On testnet the DEX
@@ -226,7 +226,7 @@ export default function CreateMandate() {
                     <div>
                       <span className="field-label">Trade size (USDC.e)</span>
                       <div className="row gap3">
-                        <input className="input mono" value={amount} onChange={e => setAmount(Number(e.target.value) || 0)} style={{ maxWidth: 140 }} />
+                        <input className="input mono" value={amount} onChange={e => setAmount(e.target.value)} style={{ maxWidth: 140 }} />
                         <span className="tok-pill" style={{ height: 38 }}>USDC.e</span>
                         <Icons.Arrow size={14} style={{ color: 'var(--text-faint)', alignSelf: 'center' }} />
                         <span className="tok-pill" style={{ height: 38 }}>WSOMI</span>
